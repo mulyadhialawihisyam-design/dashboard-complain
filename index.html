@@ -350,7 +350,7 @@ function renderForEmployee(){
   renderMonthlyDetail(rows);
 }
 
-/* ================== PIE (MODIFIKASI LEGEND) ================== */
+/* ================== PIE ================== */
 function renderPie(rows){
   const map={};
   rows.forEach(r=>{
@@ -367,7 +367,7 @@ function renderPie(rows){
         maintainAspectRatio: false,
         plugins:{
             legend:{
-                position:'right', // Pindah ke samping
+                position:'right',
                 labels: {
                     color: '#a8acc4',
                     font: { size: 10 },
@@ -379,9 +379,11 @@ function renderPie(rows){
   });
 }
 
-/* ================== BAR ================== */
+/* ================== BAR (MODIFIKASI WARNA) ================== */
 function renderBar(rows,latest){
   const m={};
+  const bgColors = ['#4facfe', '#7c7cff', '#f5576c']; // Warna beda untuk tiap bar
+  
   for(let i=2;i>=0;i--){
     const d=new Date(latest.getFullYear(),latest.getMonth()-i,1);
     m[d.getMonth()]=0;
@@ -393,13 +395,20 @@ function renderBar(rows,latest){
   if(barChart) barChart.destroy();
   barChart=new Chart(document.getElementById('barChart'),{
     type:'bar',
-    data:{labels:Object.keys(m).map(i=>MONTHS[i]),datasets:[{data:Object.values(m)}]},
+    data:{
+        labels:Object.keys(m).map(i=>MONTHS[i]),
+        datasets:[{
+            data:Object.values(m),
+            backgroundColor: bgColors, // Memberikan warna berbeda pada tiap batang
+            borderRadius: 6
+        }]
+    },
     options:{
         responsive: true,
         maintainAspectRatio: false,
         plugins:{legend:{display:false}},
         scales: {
-            y: { ticks: { color: '#a8acc4' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+            y: { ticks: { color: '#a8acc4', stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.05)' } },
             x: { ticks: { color: '#a8acc4' }, grid: { display: false } }
         }
     }
