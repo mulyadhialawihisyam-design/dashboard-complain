@@ -46,7 +46,7 @@ button.reload:hover{transform:scale(1.05);box-shadow:0 4px 15px rgba(102,126,234
 
 .container{padding:0 24px 32px}
 .grid-main{display:grid;grid-template-columns:280px 1fr 1fr;gap:16px}
-.card{background:var(--bg-card);border:1px solid var(--border-soft);border-radius:14px;padding:14px;transition:transform 0.3s ease, box-shadow 0.3s ease;transform-style:preserve-3d}
+.card{background:var(--bg-card);border:1px solid var(--border-soft);border-radius:14px;padding:14px;transition:transform 0.3s ease, box-shadow 0.3s ease;transform-style:preserve-3d;position:relative}
 .card:hover{transform:translateY(-5px) rotateX(5deg);box-shadow:0 10px 30px rgba(0,0,0,0.3)}
 .card h3{margin:0 0 8px;font-size:14px;color:var(--text-soft);font-weight:500}
 
@@ -62,7 +62,7 @@ button.reload:hover{transform:scale(1.05);box-shadow:0 4px 15px rgba(102,126,234
 .alert{margin-top:10px;padding:8px;border-radius:8px;background:linear-gradient(135deg,#ff6b6b,#ffa726);color:#fff;font-size:12px;display:none;animation:pulse 1s infinite}
 @keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.05)}100%{transform:scale(1)}}
 
-.chart-wrap{height:260px;position:relative;border-radius:10px;overflow:hidden}
+.chart-wrap{height:260px;position:relative;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center}
 .chart-wrap canvas{transition:opacity 0.5s}
 
 .section-detail{margin-top:28px}
@@ -86,8 +86,11 @@ button.reload:hover{transform:scale(1.05);box-shadow:0 4px 15px rgba(102,126,234
 .no-cases{text-align:center;color:var(--success);font-weight:600;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;animation:celebrate 2s ease-in-out infinite}
 @keyframes celebrate{0%{transform:scale(1);opacity:1}50%{transform:scale(1.1);opacity:0.8;color:var(--vibrant-green)}100%{transform:scale(1);opacity:1}}
 
-.loading{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:16px;color:var(--text-soft);display:none}
-.loading.show{display:block}
+/* MODIFIKASI LOADING ANIMATION */
+.loading{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;display:none;flex-direction:column;align-items:center;gap:10px}
+.loading.show{display:flex}
+.spinner{width:30px;height:30px;border:3px solid rgba(255,255,255,0.1);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 
 @media(max-width:1100px){.month-grid{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:900px){.grid-main{grid-template-columns:1fr}.month-grid{grid-template-columns:repeat(2,1fr)}}
@@ -110,17 +113,14 @@ button.reload:hover{transform:scale(1.05);box-shadow:0 4px 15px rgba(102,126,234
   </div>
 </header>
 
-
 <div class="toast success" id="toast"><i class="fa fa-check-circle"></i> Data berhasil dimuat ulang</div>
 
 <div class="container">
-
   <div class="grid-main">
     <div class="card profile">
       <h3>Pilih PIC</h3>
       <input type="text" id="employeeInput" list="employeeList" placeholder="Ketik nama PIC..." style="width:100%;padding:6px;border-radius:8px;border:1px solid var(--border-soft);background:rgba(0,0,0,0.3);color:var(--text-main)">
       <datalist id="employeeList"></datalist>
-      
 
       <div class="avatar" id="avatar">?</div>
       <div id="employeeName" style="font-weight:600"></div>
@@ -135,7 +135,10 @@ button.reload:hover{transform:scale(1.05);box-shadow:0 4px 15px rgba(102,126,234
     <div class="card">
       <h3>Distribusi Kasus (Invoice Unique)</h3>
       <div class="chart-wrap">
-        <div class="loading" id="pieLoading">Memuat chart...</div>
+        <div class="loading" id="pieLoading">
+            <div class="spinner"></div>
+            <span style="font-size:12px">Memuat chart...</span>
+        </div>
         <canvas id="pieChart"></canvas>
       </div>
     </div>
@@ -143,7 +146,10 @@ button.reload:hover{transform:scale(1.05);box-shadow:0 4px 15px rgba(102,126,234
     <div class="card">
       <h3>Komplain 3 Bulan Terakhir</h3>
       <div class="chart-wrap">
-        <div class="loading" id="barLoading">Memuat chart...</div>
+        <div class="loading" id="barLoading">
+            <div class="spinner"></div>
+            <span style="font-size:12px">Memuat chart...</span>
+        </div>
         <canvas id="barChart"></canvas>
       </div>
     </div>
@@ -227,7 +233,7 @@ async function loadAndRender(){
     })).filter(r=>r.d && r.pic_yang_melakukan_kesalahan);
 
     buildEmployeeList();
-    buildYearSelect();   // <<< FIX UTAMA
+    buildYearSelect();
     showToast();
   }catch(err){
     console.error(err);
@@ -260,7 +266,7 @@ employeeInput.addEventListener('change',()=>{
   renderForEmployee();
 });
 
-/* ================== YEAR (FIX) ================== */
+/* ================== YEAR ================== */
 function buildYearSelect(){
   const years=[...new Set(rawData.map(r=>r.d.getFullYear()))].sort((a,b)=>b-a);
   yearSelect.innerHTML='';
@@ -344,7 +350,7 @@ function renderForEmployee(){
   renderMonthlyDetail(rows);
 }
 
-/* ================== PIE ================== */
+/* ================== PIE (MODIFIKASI LEGEND) ================== */
 function renderPie(rows){
   const map={};
   rows.forEach(r=>{
@@ -356,7 +362,20 @@ function renderPie(rows){
   pieChart=new Chart(document.getElementById('pieChart'),{
     type:'pie',
     data:{labels:Object.keys(map),datasets:[{data:Object.values(map)}]},
-    options:{plugins:{legend:{position:'bottom'}}}
+    options:{
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins:{
+            legend:{
+                position:'right', // Pindah ke samping
+                labels: {
+                    color: '#a8acc4',
+                    font: { size: 10 },
+                    boxWidth: 12
+                }
+            }
+        }
+    }
   });
 }
 
@@ -375,7 +394,15 @@ function renderBar(rows,latest){
   barChart=new Chart(document.getElementById('barChart'),{
     type:'bar',
     data:{labels:Object.keys(m).map(i=>MONTHS[i]),datasets:[{data:Object.values(m)}]},
-    options:{plugins:{legend:{display:false}}}
+    options:{
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins:{legend:{display:false}},
+        scales: {
+            y: { ticks: { color: '#a8acc4' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+            x: { ticks: { color: '#a8acc4' }, grid: { display: false } }
+        }
+    }
   });
 }
 
@@ -415,7 +442,7 @@ function renderMonthlyDetail(rows){
 document.getElementById('reloadBtn').addEventListener('click',loadAndRender);
 loadAndRender();
 </script>
-  
+
 <footer class="app-footer">Created By Mulya.ID</footer>
 
 <style>
@@ -427,7 +454,5 @@ footer.app-footer{
   color:rgba(168,172,196,.65);
 }
 </style>
-
-
 </body>
 </html>
