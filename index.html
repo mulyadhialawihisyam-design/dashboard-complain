@@ -1,467 +1,331 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Dashboard Komplain Shipment</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard Komplain Shipment</title>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-<style>
-:root{
-  --bg-main:#0f1220;
-  --bg-card:rgba(255,255,255,0.06);
-  --border-soft:rgba(255,255,255,0.12);
-  --text-main:#eaeaf0;
-  --text-soft:#a8acc4;
-  --accent:#7c7cff;
-  --success:#4ade80;
-  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  --gradient-accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  --vibrant-red: #ff4757;
-  --vibrant-blue: #3742fa;
-  --vibrant-green: #2ed573;
-  --vibrant-yellow: #ffa502;
-  --vibrant-purple: #6c5ce7;
-  --vibrant-orange: #fd79a8;
-}
-*{box-sizing:border-box;font-family:Inter,system-ui,Segoe UI,Arial,sans-serif}
-body{margin:0;background:linear-gradient(160deg,#0b0e1a,#14183a);color:var(--text-main);overflow-x:hidden}
+    <style>
+        :root {
+            --bg-main: #0f1220;
+            --bg-card: rgba(255, 255, 255, 0.06);
+            --border-soft: rgba(255, 255, 255, 0.12);
+            --text-main: #eaeaf0;
+            --text-soft: #a8acc4;
+            --accent: #7c7cff;
+            --success: #4ade80;
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --vibrant-blue: #3742fa;
+        }
 
-header{padding:20px 24px;display:flex;align-items:center;justify-content:space-between}
-header h1{margin:0;font-size:20px;font-weight:600}
-button.reload{background:var(--gradient-primary);border:none;color:#fff;padding:10px 16px;border-radius:10px;cursor:pointer;font-weight:600;transition:transform 0.2s, box-shadow 0.2s}
-button.reload:hover{transform:scale(1.05);box-shadow:0 4px 15px rgba(102,126,234,0.4)}
+        * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { margin: 0; background: linear-gradient(160deg, #0b0e1a, #14183a); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; }
 
-.toast{position:fixed;top:20px;right:20px;background:rgba(30,41,59,.95);border:1px solid rgba(148,163,184,.25);padding:12px 16px;border-radius:12px;font-size:13px;display:none;align-items:center;gap:8px;z-index:999;animation:slideIn 0.3s ease-out}
-.toast.success{border-color:rgba(74,222,128,.6)}
-.toast i{color:var(--success)}
-@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+        header { padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; }
+        button.reload { background: var(--gradient-primary); border: none; color: #fff; padding: 10px 16px; border-radius: 10px; cursor: pointer; font-weight: 600; transition: 0.3s; }
+        button.reload:hover { transform: scale(1.05); }
 
-.container{padding:0 24px 32px}
-.grid-main{display:grid;grid-template-columns:280px 1fr 1fr;gap:16px}
-.card{background:var(--bg-card);border:1px solid var(--border-soft);border-radius:14px;padding:14px;transition:transform 0.3s ease, box-shadow 0.3s ease;transform-style:preserve-3d;position:relative}
-.card:hover{transform:translateY(-5px) rotateX(5deg);box-shadow:0 10px 30px rgba(0,0,0,0.3)}
-.card h3{margin:0 0 8px;font-size:14px;color:var(--text-soft);font-weight:500}
+        .container { padding: 0 24px 32px; flex: 1; }
+        .grid-main { display: grid; grid-template-columns: 280px 1fr 1fr; gap: 16px; }
+        .card { background: var(--bg-card); border: 1px solid var(--border-soft); border-radius: 14px; padding: 16px; position: relative; }
+        
+        #employeeInput { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-soft); background: rgba(0, 0, 0, 0.4); color: white; margin-bottom: 15px; outline: none; }
+        .avatar { width: 70px; height: 70px; border-radius: 50%; background: var(--gradient-primary); display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 10px; border: 2px solid var(--accent); }
+        .kpi { display: flex; justify-content: space-between; gap: 8px; margin-top: 15px; }
+        .kpi div { text-align: center; flex: 1; padding: 10px; border-radius: 8px; background: rgba(255, 255, 255, 0.04); }
+        .kpi strong { display: block; font-size: 18px; color: var(--accent); }
 
-.profile{text-align:center}
-.avatar{width:72px;height:72px;border-radius:50%;background:var(--gradient-accent);display:flex;align-items:center;justify-content:center;font-size:26px;margin:12px auto 6px;border:2px solid rgba(124,124,255,0.6);box-shadow:0 4px 10px rgba(79,172,254,0.3);transition:transform 0.3s}
-.avatar:hover{transform:scale(1.1)}
+        .chart-wrap { height: 240px; width: 100%; position: relative; }
 
-.kpi{display:flex;justify-content:space-between;margin-top:12px}
-.kpi div{text-align:center;flex:1;padding:8px;border-radius:8px;background:rgba(255,255,255,0.05);transition:background 0.3s}
-.kpi div:hover{background:rgba(255,255,255,0.1)}
-.kpi strong{display:block;font-size:18px;color:var(--accent)}
+        .toast { position: fixed; top: 20px; right: 20px; background: #1e293b; color: white; padding: 12px 20px; border-radius: 10px; border-left: 4px solid var(--success); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); z-index: 1000; display: none; align-items: center; gap: 10px; animation: slideIn 0.5s ease-out; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-.alert{margin-top:10px;padding:8px;border-radius:8px;background:linear-gradient(135deg,#ff6b6b,#ffa726);color:#fff;font-size:12px;display:none;animation:pulse 1s infinite}
-@keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.05)}100%{transform:scale(1)}}
+        .filter-row { display: flex; gap: 12px; margin-bottom: 20px; }
+        .filter-row select { background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border-soft); color: #fff; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
 
-.chart-wrap{height:260px;position:relative;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center}
-.chart-wrap canvas{transition:opacity 0.5s}
+        .month-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+        .month-card { background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-soft); border-radius: 12px; padding: 15px; }
+        .month-card h4 { margin: 0 0 12px; padding: 6px; text-align: center; background: var(--vibrant-blue); border-radius: 6px; font-size: 14px; color: white; }
 
-.section-detail{margin-top:28px}
-.section-detail h2{margin:0 0 12px;font-size:16px;font-weight:600}
+        .invoice-item { margin-bottom: 10px; padding: 12px; border-radius: 8px; background: rgba(255, 255, 255, 0.04); border-left: 3px solid transparent; transition: 0.2s; }
+        .invoice-item:hover { background: rgba(124, 124, 255, 0.08); border-left-color: var(--accent); }
+        .invoice-link { color: var(--accent); text-decoration: none; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+        
+        .status-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-top: 8px; display: inline-block; }
+        .status-terkirim { background: rgba(74, 222, 128, 0.1); color: var(--success); }
+        .status-pending { background: rgba(255, 71, 87, 0.1); color: #ff4757; }
 
-.filter-row{display:flex;gap:12px;margin-bottom:14px}
-.filter-row select, .filter-row input{background:rgba(0,0,0,0.3);border:1px solid var(--border-soft);color:var(--text-main);padding:6px 10px;border-radius:8px;transition:border-color 0.3s}
-.filter-row select:focus, .filter-row input:focus{border-color:var(--accent);outline:none}
+        footer { text-align: center; padding: 20px; color: var(--text-soft); font-size: 13px; border-top: 1px solid var(--border-soft); background: rgba(0,0,0,0.2); }
 
-.month-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-.month-card{background:linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));border:1px solid var(--border-soft);border-radius:12px;padding:10px;min-height:120px;transition:transform 0.3s, box-shadow 0.3s, background 0.3s;position:relative;overflow:hidden}
-.month-card::before{content:'';position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);transform:translateX(-100%);transition:transform 0.6s}
-.month-card:hover::before{transform:translateX(100%)}
-.month-card:hover{transform:translateY(-3px) scale(1.02);box-shadow:0 8px 25px rgba(0,0,0,0.4);background:linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.1))}
-.month-card h4{margin:0 0 6px;font-size:13px;font-weight:600;text-align:center;padding:4px;border-radius:6px;background:linear-gradient(135deg, var(--vibrant-blue), var(--vibrant-purple));color:#fff;box-shadow:0 2px 5px rgba(0,0,0,0.2)}
-.month-list{font-size:11px;line-height:1.4;color:var(--text-main)}
-.month-list .invoice-item{margin-bottom:8px;padding:4px;border-radius:4px;background:rgba(255,255,255,0.05)}
-.month-list .invoice-item strong{color:var(--accent);font-size:12px}
-.month-list .invoice-item ul{margin:4px 0 0 0;padding-left:16px;list-style:disc}
-.month-list .invoice-item ul li{font-size:10px;color:var(--text-soft)}
-.no-cases{text-align:center;color:var(--success);font-weight:600;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;animation:celebrate 2s ease-in-out infinite}
-@keyframes celebrate{0%{transform:scale(1);opacity:1}50%{transform:scale(1.1);opacity:0.8;color:var(--vibrant-green)}100%{transform:scale(1);opacity:1}}
-
-/* MODIFIKASI LOADING ANIMATION */
-.loading{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;display:none;flex-direction:column;align-items:center;gap:10px}
-.loading.show{display:flex}
-.spinner{width:30px;height:30px;border:3px solid rgba(255,255,255,0.1);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-@media(max-width:1100px){.month-grid{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:900px){.grid-main{grid-template-columns:1fr}.month-grid{grid-template-columns:repeat(2,1fr)}}
-</style>
+        .loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none; }
+        .loading.show { display: block; }
+        .spinner { width: 30px; height: 30px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
 </head>
 <body>
-<header>
-  <h1>Dashboard Komplain Shipment</h1>
 
-  <div style="display:flex;gap:10px">
-    <a href="https://mulyadhialawihisyam-design.github.io/Monitoring-Complain/"
-       target="_blank"
-       class="monitoring-btn">
-      <i class="fa fa-chart-line"></i> Monitoring
-    </a>
-
-    <button class="reload" id="reloadBtn">
-      <i class="fa fa-rotate"></i> Muat Ulang
-    </button>
-  </div>
-</header>
-
-<div class="toast success" id="toast"><i class="fa fa-check-circle"></i> Data berhasil dimuat ulang</div>
-
-<div class="container">
-  <div class="grid-main">
-    <div class="card profile">
-      <h3>Pilih PIC</h3>
-      <input type="text" id="employeeInput" list="employeeList" placeholder="Ketik nama PIC..." style="width:100%;padding:6px;border-radius:8px;border:1px solid var(--border-soft);background:rgba(0,0,0,0.3);color:var(--text-main)">
-      <datalist id="employeeList"></datalist>
-
-      <div class="avatar" id="avatar">?</div>
-      <div id="employeeName" style="font-weight:600"></div>
-
-      <div class="kpi">
-        <div><strong id="kpiTotal">0</strong><span style="font-size:12px">Komplain</span></div>
-        <div><strong id="kpiInvoice">0</strong><span style="font-size:12px">Invoice</span></div>
-      </div>
-      <div class="alert" id="alertBox">⚠ Komplain bulan ini lebih dari 2</div>
-    </div>
-
-    <div class="card">
-      <h3>Distribusi Kasus (Invoice Unique)</h3>
-      <div class="chart-wrap">
-        <div class="loading" id="pieLoading">
-            <div class="spinner"></div>
-            <span style="font-size:12px">Memuat chart...</span>
-        </div>
-        <canvas id="pieChart"></canvas>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3>Komplain 3 Bulan Terakhir</h3>
-      <div class="chart-wrap">
-        <div class="loading" id="barLoading">
-            <div class="spinner"></div>
-            <span style="font-size:12px">Memuat chart...</span>
-        </div>
-        <canvas id="barChart"></canvas>
-      </div>
-    </div>
-  </div>
-
-  <div class="section-detail">
-    <h2>Detail Komplain Tahunan</h2>
-    <div class="filter-row">
-      <select id="yearSelect"></select>
-      <select id="monthSelect"><option value="all">Semua Bulan</option></select>
-      <select id="statusSelect">
-        <option value="all">Semua Status</option>
-        <option value="Sudah Terkirim">Sudah Terkirim</option>
-        <option value="Belum Terkirim">Belum Terkirim</option>
-      </select>
-    </div>
-    <div class="month-grid" id="monthGrid"></div>
-  </div>
+<div id="toast" class="toast">
+    <i class="fa fa-check-circle" style="color: var(--success)"></i>
+    <span>Data berhasil dimuat!</span>
 </div>
 
+<header>
+    <h1>Dashboard Komplain</h1>
+    <div style="display:flex; gap:10px">
+        <a href="https://mulyadhialawihisyam-design.github.io/Monitoring-Complain/" target="_blank" style="text-decoration:none; color:white; background:rgba(255,255,255,0.08); padding:10px 16px; border-radius:10px; font-size:14px;">
+            <i class="fa fa-chart-line"></i> Monitoring
+        </a>
+        <button class="reload" id="reloadBtn"><i class="fa fa-rotate"></i> Reload Data</button>
+    </div>
+</header>
+
+<div class="container">
+    <div class="grid-main">
+        <div class="card">
+            <h3>Pilih PIC</h3>
+            <input type="text" id="employeeInput" list="employeeList" placeholder="Cari Nama...">
+            <datalist id="employeeList"></datalist>
+            <div class="avatar" id="avatar">?</div>
+            <div id="employeeName" style="text-align:center; font-weight:600; font-size: 18px;">---</div>
+            <div class="kpi">
+                <div><strong id="kpiTotal">0</strong><span style="font-size: 11px;">Total Kesalahan</span></div>
+                <div><strong id="kpiInvoice">0</strong><span style="font-size: 11px;">Uniq Invoice</span></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Distribusi Kasus</h3>
+            <div class="chart-wrap">
+                <div class="loading" id="pieLoading"><div class="spinner"></div></div>
+                <canvas id="pieChart"></canvas>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Tren 3 Bulan Terakhir</h3>
+            <div class="chart-wrap">
+                <canvas id="barChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-detail" style="margin-top: 35px;">
+        <h2 style="font-size: 18px; margin-bottom: 15px;">Detail Komplain Tahunan</h2>
+        <div class="filter-row">
+            <select id="yearSelect"></select>
+            <select id="monthSelect"><option value="all">Semua Bulan</option></select>
+            <select id="statusSelect">
+                <option value="all">Semua Status</option>
+                <option value="Sudah Terkirim">Sudah Terkirim</option>
+                <option value="Belum Terkirim">Belum Terkirim</option>
+            </select>
+        </div>
+        <div class="month-grid" id="monthGrid"></div>
+    </div>
+</div>
+
+<footer>Created by <strong>Mulya.ID</strong></footer>
+
 <script>
-/* ================== KONFIG ================== */
 const DATA_URL = 'https://script.google.com/macros/s/AKfycbyWBWuNZs9m3ixRZ6NUrEtX8pxhtdvPRmh5Yw_70J6GDdikF76QByva9zRB5mzA9plR/exec';
 const MONTHS = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 
-/* ================== STATE ================== */
 let rawData = [];
 let pieChart = null;
 let barChart = null;
+let selectedEmployee = '', selectedYear = '', selectedMonth = 'all', selectedStatus = 'all';
 
-let selectedEmployee = '';
-let selectedYear = '';
-let selectedMonth = 'all';
-let selectedStatus = 'all';
-
-/* ================== DOM ================== */
-const employeeInput = document.getElementById('employeeInput');
-const employeeList  = document.getElementById('employeeList');
-const employeeName  = document.getElementById('employeeName');
-const avatar        = document.getElementById('avatar');
-const kpiTotal      = document.getElementById('kpiTotal');
-const kpiInvoice    = document.getElementById('kpiInvoice');
-const alertBox      = document.getElementById('alertBox');
-
-const yearSelect    = document.getElementById('yearSelect');
-const monthSelect   = document.getElementById('monthSelect');
-const statusSelect  = document.getElementById('statusSelect');
-const monthGrid     = document.getElementById('monthGrid');
-
-const pieLoading    = document.getElementById('pieLoading');
-const barLoading    = document.getElementById('barLoading');
-
-/* ================== UTIL ================== */
-function parseDateStr(str){
-  if(!str) return null;
-  const [d,m,y] = str.split('/').map(Number);
-  if(!d||!m||!y) return null;
-  return new Date(y, m-1, d);
+function showToast() {
+    const toast = document.getElementById('toast');
+    toast.style.display = 'flex';
+    setTimeout(() => { toast.style.display = 'none'; }, 3000);
 }
 
-function showToast(){
-  const t = document.getElementById('toast');
-  t.style.display = 'flex';
-  setTimeout(()=>t.style.display='none',3000);
+async function loadData() {
+    document.getElementById('pieLoading').classList.add('show');
+    try {
+        const res = await fetch(DATA_URL);
+        const json = await res.json();
+        const data = json.data || json.rows || json || [];
+        
+        rawData = data.map(r => ({
+            ...r,
+            pic: (r.pic_yang_melakukan_kesalahan || '').trim(),
+            d: parseDate(r.tanggal),
+            detail: r.detail_kesalahan || '',
+            status: (r.status_terkirim || '').trim()
+        })).filter(r => r.d && r.pic);
+
+        populateEmployees();
+        populateYears();
+        populateMonths();
+        showToast();
+    } catch (e) { console.error(e); }
+    finally { document.getElementById('pieLoading').classList.remove('show'); }
 }
 
-/* ================== LOAD DATA ================== */
-async function loadAndRender(){
-  try{
-    pieLoading.classList.add('show');
-    barLoading.classList.add('show');
-
-    const res = await fetch(DATA_URL,{cache:'no-store'});
-    const json = await res.json();
-    const rows = json.data || json.rows || json || [];
-
-    rawData = rows.map(r=>({
-      ...r,
-      pic_yang_melakukan_kesalahan: (r.pic_yang_melakukan_kesalahan || r.febriansyah_hidayatullo || '').trim(),
-      d: parseDateStr(r.tanggal)
-    })).filter(r=>r.d && r.pic_yang_melakukan_kesalahan);
-
-    buildEmployeeList();
-    buildYearSelect();
-    showToast();
-  }catch(err){
-    console.error(err);
-  }finally{
-    pieLoading.classList.remove('show');
-    barLoading.classList.remove('show');
-  }
+function parseDate(s) {
+    if(!s) return null;
+    const p = s.split('/');
+    return new Date(p[2], p[1]-1, p[0]);
 }
 
-/* ================== EMPLOYEE ================== */
-function buildEmployeeList(){
-  employeeList.innerHTML='';
-  const map = new Map();
-
-  rawData.forEach(r=>{
-    const n = r.pic_yang_melakukan_kesalahan;
-    if(!map.has(n.toLowerCase())){
-      map.set(n.toLowerCase(),n);
-      const o=document.createElement('option');
-      o.value=n;
-      employeeList.appendChild(o);
-    }
-  });
+function populateEmployees() {
+    const list = document.getElementById('employeeList');
+    const pics = [...new Set(rawData.map(r => r.pic))].sort();
+    list.innerHTML = pics.map(p => `<option value="${p}">`).join('');
 }
 
-employeeInput.addEventListener('change',()=>{
-  const val = employeeInput.value.trim();
-  if(!val) return;
-  selectedEmployee = val;
-  renderForEmployee();
-});
-
-/* ================== YEAR ================== */
-function buildYearSelect(){
-  const years=[...new Set(rawData.map(r=>r.d.getFullYear()))].sort((a,b)=>b-a);
-  yearSelect.innerHTML='';
-  years.forEach(y=>{
-    const o=document.createElement('option');
-    o.value=y;
-    o.textContent=y;
-    yearSelect.appendChild(o);
-  });
-  if(!selectedYear) selectedYear=years[0];
-  yearSelect.value=selectedYear;
-  buildMonthSelect();
+function populateYears() {
+    const years = [...new Set(rawData.map(r => r.d.getFullYear()))].sort((a,b)=>b-a);
+    const sel = document.getElementById('yearSelect');
+    sel.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+    selectedYear = years[0];
 }
 
-yearSelect.addEventListener('change',()=>{
-  selectedYear=yearSelect.value;
-  if(selectedEmployee) renderForEmployee();
-});
-
-/* ================== MONTH ================== */
-function buildMonthSelect(){
-  monthSelect.innerHTML='<option value="all">Semua Bulan</option>';
-  MONTHS.forEach((m,i)=>{
-    const o=document.createElement('option');
-    o.value=i;
-    o.textContent=m;
-    monthSelect.appendChild(o);
-  });
+function populateMonths() {
+    const sel = document.getElementById('monthSelect');
+    MONTHS.forEach((m, i) => { sel.innerHTML += `<option value="${i}">${m}</option>`; });
 }
 
-monthSelect.addEventListener('change',()=>{
-  selectedMonth=monthSelect.value;
-  if(selectedEmployee) renderForEmployee();
-});
+document.getElementById('employeeInput').addEventListener('change', (e) => { selectedEmployee = e.target.value; update(); });
+document.getElementById('yearSelect').addEventListener('change', (e) => { selectedYear = e.target.value; update(); });
+document.getElementById('monthSelect').addEventListener('change', (e) => { selectedMonth = e.target.value; update(); });
+document.getElementById('statusSelect').addEventListener('change', (e) => { selectedStatus = e.target.value; update(); });
 
-/* ================== STATUS ================== */
-statusSelect.addEventListener('change',()=>{
-  selectedStatus=statusSelect.value;
-  if(selectedEmployee) renderForEmployee();
-});
-
-/* ================== FILTER ================== */
-function getFilteredRows(){
-  return rawData.filter(r=>{
-    if(r.pic_yang_melakukan_kesalahan!==selectedEmployee) return false;
-    if(selectedYear && r.d.getFullYear()!==Number(selectedYear)) return false;
-    if(selectedMonth!=='all' && r.d.getMonth()!==Number(selectedMonth)) return false;
-    if(selectedStatus!=='all' && (r.status_terkirim||'')!==selectedStatus) return false;
-    return true;
-  });
-}
-
-/* ================== RENDER ================== */
-function renderForEmployee(){
-  const rows=getFilteredRows();
-
-  employeeName.textContent=selectedEmployee;
-  avatar.textContent=selectedEmployee[0]||'?';
-
-  if(!rows.length){
-    kpiTotal.textContent='0';
-    kpiInvoice.textContent='0';
-    alertBox.style.display='none';
-    monthGrid.innerHTML='<div class="no-cases">Tidak ada data</div>';
-    if(pieChart) pieChart.destroy();
-    if(barChart) barChart.destroy();
-    return;
-  }
-
-  rows.sort((a,b)=>b.d-a.d);
-  const latest=rows[0].d;
-  const monthRows=rows.filter(r=>r.d.getMonth()===latest.getMonth() && r.d.getFullYear()===latest.getFullYear());
-
-  const uniq=new Set(monthRows.map(r=>r.invoice));
-  kpiTotal.textContent=uniq.size;
-  kpiInvoice.textContent=uniq.size;
-  alertBox.style.display=uniq.size>2?'block':'none';
-
-  renderPie(rows);
-  renderBar(rows,latest);
-  renderMonthlyDetail(rows);
-}
-
-/* ================== PIE ================== */
-function renderPie(rows){
-  const map={};
-  rows.forEach(r=>{
-    const k=r.kasus||'Lainnya';
-    map[k]=(map[k]||0)+1;
-  });
-
-  if(pieChart) pieChart.destroy();
-  pieChart=new Chart(document.getElementById('pieChart'),{
-    type:'pie',
-    data:{labels:Object.keys(map),datasets:[{data:Object.values(map)}]},
-    options:{
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins:{
-            legend:{
-                position:'right',
-                labels: {
-                    color: '#a8acc4',
-                    font: { size: 10 },
-                    boxWidth: 12
-                }
-            }
-        }
-    }
-  });
-}
-
-/* ================== BAR (MODIFIKASI WARNA) ================== */
-function renderBar(rows,latest){
-  const m={};
-  const bgColors = ['#4facfe', '#7c7cff', '#f5576c']; // Warna beda untuk tiap bar
-  
-  for(let i=2;i>=0;i--){
-    const d=new Date(latest.getFullYear(),latest.getMonth()-i,1);
-    m[d.getMonth()]=0;
-  }
-  rows.forEach(r=>{
-    if(m[r.d.getMonth()]!==undefined) m[r.d.getMonth()]++;
-  });
-
-  if(barChart) barChart.destroy();
-  barChart=new Chart(document.getElementById('barChart'),{
-    type:'bar',
-    data:{
-        labels:Object.keys(m).map(i=>MONTHS[i]),
-        datasets:[{
-            data:Object.values(m),
-            backgroundColor: bgColors, // Memberikan warna berbeda pada tiap batang
-            borderRadius: 6
-        }]
-    },
-    options:{
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins:{legend:{display:false}},
-        scales: {
-            y: { ticks: { color: '#a8acc4', stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.05)' } },
-            x: { ticks: { color: '#a8acc4' }, grid: { display: false } }
-        }
-    }
-  });
-}
-
-/* ================== DETAIL ================== */
-function renderMonthlyDetail(rows){
-  monthGrid.innerHTML='';
-  const g={};
-
-  rows.forEach(r=>{
-    const k=`${r.d.getFullYear()}-${r.d.getMonth()}`;
-    if(!g[k]) g[k]=[];
-    g[k].push(r);
-  });
-
-  Object.keys(g).sort().reverse().forEach(k=>{
-    const list=g[k];
-    const d=list[0].d;
-    const card=document.createElement('div');
-    card.className='month-card';
-    card.innerHTML=`<h4>${MONTHS[d.getMonth()]} ${d.getFullYear()}</h4>`;
-    const wrap=document.createElement('div');
-    wrap.className='month-list';
-
-    list.forEach(r=>{
-      const div=document.createElement('div');
-      div.className='invoice-item';
-      div.innerHTML=`<strong>${r.invoice||'-'}</strong><br>${r.kasus||'-'} (${r.status_terkirim||'-'})`;
-      wrap.appendChild(div);
+function update() {
+    if(!selectedEmployee) return;
+    const baseData = rawData.filter(r => r.pic === selectedEmployee && r.d.getFullYear() == selectedYear);
+    const detailData = baseData.filter(r => {
+        const matchMonth = selectedMonth === 'all' || r.d.getMonth() == selectedMonth;
+        const matchStatus = selectedStatus === 'all' || r.status === selectedStatus;
+        return matchMonth && matchStatus;
     });
 
-    card.appendChild(wrap);
-    monthGrid.appendChild(card);
-  });
+    document.getElementById('employeeName').textContent = selectedEmployee;
+    document.getElementById('avatar').textContent = selectedEmployee[0].toUpperCase();
+    document.getElementById('kpiTotal').textContent = baseData.length;
+    document.getElementById('kpiInvoice').textContent = new Set(baseData.map(r => r.invoice)).size;
+
+    renderPie(baseData);
+    renderBar(baseData); // REVISI 4: Aktifkan Bar Tren
+    renderMonthlyDetail(detailData);
 }
 
-/* ================== INIT ================== */
-document.getElementById('reloadBtn').addEventListener('click',loadAndRender);
-loadAndRender();
+function renderPie(rows) {
+    const counts = {};
+    rows.forEach(r => counts[r.kasus] = (counts[r.kasus] || 0) + 1);
+    if(pieChart) pieChart.destroy();
+    pieChart = new Chart(document.getElementById('pieChart'), {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(counts),
+            datasets: [{ 
+                data: Object.values(counts), 
+                backgroundColor: ['#3742fa', '#7c7cff', '#f5576c', '#2ed573', '#ffa502'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '65%',
+            plugins: { legend: { position: 'right', labels: { color: '#a8acc4', font: { size: 10 }, boxWidth: 10 } } }
+        }
+    });
+}
+
+// LOGIKA TREN 3 BULAN (REVISI 4)
+function renderBar(rows) {
+    const latestDate = new Date(Math.max(...rows.map(r => r.d)));
+    const monthsToShow = [];
+    
+    for (let i = 2; i >= 0; i--) {
+        let d = new Date(latestDate.getFullYear(), latestDate.getMonth() - i, 1);
+        monthsToShow.push({
+            monthIndex: d.getMonth(),
+            year: d.getFullYear(),
+            label: MONTHS[d.getMonth()],
+            count: 0
+        });
+    }
+
+    rows.forEach(r => {
+        monthsToShow.forEach(m => {
+            if (r.d.getMonth() === m.monthIndex && r.d.getFullYear() === m.year) {
+                m.count++;
+            }
+        });
+    });
+
+    if (barChart) barChart.destroy();
+    barChart = new Chart(document.getElementById('barChart'), {
+        type: 'bar',
+        data: {
+            labels: monthsToShow.map(m => m.label),
+            datasets: [{
+                label: 'Jumlah Komplain',
+                data: monthsToShow.map(m => m.count),
+                backgroundColor: ['#4facfe', '#7c7cff', '#f5576c'],
+                borderRadius: 8,
+                barThickness: 30
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, ticks: { color: '#a8acc4', stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                x: { ticks: { color: '#a8acc4' }, grid: { display: false } }
+            }
+        }
+    });
+}
+
+function renderMonthlyDetail(rows) {
+    const grid = document.getElementById('monthGrid');
+    grid.innerHTML = '';
+    const grouped = {};
+    rows.forEach(r => {
+        const m = r.d.getMonth();
+        if(!grouped[m]) grouped[m] = [];
+        grouped[m].push(r);
+    });
+
+    Object.keys(grouped).sort((a,b)=>b-a).forEach(m => {
+        const card = document.createElement('div');
+        card.className = 'month-card';
+        card.innerHTML = `<h4>${MONTHS[m]} ${selectedYear}</h4>`;
+        grouped[m].forEach(r => {
+            const linkMatch = r.detail.match(/https?:\/\/[^\s|]+/g);
+            const driveUrl = linkMatch ? linkMatch[0] : '#';
+            const cleanText = r.detail.split('|')[0].replace(driveUrl, '').trim();
+            const statusClass = r.status === 'Sudah Terkirim' ? 'status-terkirim' : 'status-pending';
+
+            const item = document.createElement('div');
+            item.className = 'invoice-item';
+            item.innerHTML = `
+                <a href="${driveUrl}" target="_blank" class="invoice-link">
+                    <i class="fa fa-external-link-alt" style="font-size: 10px;"></i> ${r.invoice || 'N/A'}
+                </a>
+                <div style="font-size:12px; margin-top:4px; font-weight:500;">${r.kasus}</div>
+                <div style="font-size:11px; color:var(--text-soft); margin-top:5px; font-style:italic;">${cleanText || 'Detail tidak tersedia'}</div>
+                <div class="status-badge ${statusClass}">${r.status}</div>
+            `;
+            card.appendChild(item);
+        });
+        grid.appendChild(card);
+    });
+}
+
+document.getElementById('reloadBtn').addEventListener('click', loadData);
+loadData();
 </script>
-
-<footer class="app-footer">Created By Mulya.ID</footer>
-
-<style>
-footer.app-footer{
-  margin-top:48px;
-  padding:16px 0;
-  text-align:center;
-  font-size:12px;
-  color:rgba(168,172,196,.65);
-}
-</style>
 </body>
 </html>
