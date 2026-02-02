@@ -200,28 +200,44 @@ document.getElementById('statusSelect').addEventListener('change', (e) => { sele
 
 function update() {
     if(!selectedEmployee) return;
+    
+    // 1. Filter dasar berdasarkan PIC dan Tahun
     const baseData = rawData.filter(r => r.pic === selectedEmployee && r.d.getFullYear() == selectedYear);
+    
+    // 2. Filter Detail (Sinkron dengan input filter Bulan & Status)
     const detailData = baseData.filter(r => {
         const matchMonth = selectedMonth === 'all' || r.d.getMonth() == selectedMonth;
         const matchStatus = selectedStatus === 'all' || r.status === selectedStatus;
         return matchMonth && matchStatus;
     });
 
+    // 3. Update Profil & KPI (Dinamis sesuai filter)
     document.getElementById('employeeName').textContent = selectedEmployee;
     document.getElementById('avatar').textContent = selectedEmployee[0].toUpperCase();
-    document.getElementById('kpiTotal').textContent = baseData.length;
-    document.getElementById('kpiInvoice').textContent = new Set(baseData.map(r => r.invoice)).size;
+    document.getElementById('kpiTotal').textContent = detailData.length;
+    document.getElementById('kpiInvoice').textContent = new Set(detailData.map(r => r.invoice)).size;
 
-    renderPie(baseData);
-    renderBar(baseData); // REVISI 4: Aktifkan Bar Tren
+    // 4. Update Visualisasi (Semua pakai detailData agar Dinamis!)
+    renderPie(detailData); 
+    renderBar(baseData); // Tren tetap baseData supaya perbandingan 3 bulan terakhir tetap kelihatan
     renderMonthlyDetail(detailData);
 }
 
 function renderPie(rows) {
     const counts = {};
     rows.forEach(r => counts[r.kasus] = (counts[r.kasus] || 0) + 1);
+    
+    const canvas = document.getElementById('pieChart');
     if(pieChart) pieChart.destroy();
-    pieChart = new Chart(document.getElementById('pieChart'), {
+
+    // Jika data kosong setelah difilter, jangan gambar chart
+    if (rows.length === 0) {
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        return;
+    }
+
+    pieChart = new Chart(canvas, {
         type: 'doughnut',
         data: {
             labels: Object.keys(counts),
@@ -235,7 +251,12 @@ function renderPie(rows) {
             responsive: true,
             maintainAspectRatio: false,
             cutout: '65%',
-            plugins: { legend: { position: 'right', labels: { color: '#a8acc4', font: { size: 10 }, boxWidth: 10 } } }
+            plugins: { 
+                legend: { 
+                    position: 'right', 
+                    labels: { color: '#a8acc4', font: { size: 10 }, boxWidth: 10 } 
+                } 
+            }
         }
     });
 }
