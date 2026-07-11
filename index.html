@@ -54,10 +54,6 @@
         .invoice-item { margin-bottom: 10px; padding: 12px; border-radius: 8px; background: rgba(255, 255, 255, 0.04); border-left: 3px solid transparent; transition: 0.2s; }
         .invoice-item:hover { background: rgba(124, 124, 255, 0.08); border-left-color: var(--accent); }
         .invoice-link { color: var(--accent); text-decoration: none; font-weight: 700; display: flex; align-items: center; gap: 6px; }
-        
-        .status-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-top: 8px; display: inline-block; }
-        .status-terkirim { background: rgba(74, 222, 128, 0.1); color: var(--success); }
-        .status-pending { background: rgba(255, 71, 87, 0.1); color: #ff4757; }
 
         footer { text-align: center; padding: 20px; color: var(--text-soft); font-size: 13px; border-top: 1px solid var(--border-soft); background: rgba(0,0,0,0.2); }
 
@@ -119,11 +115,6 @@
         <div class="filter-row">
             <select id="yearSelect"></select>
             <select id="monthSelect"><option value="all">Semua Bulan</option></select>
-            <select id="statusSelect">
-                <option value="all">Semua Status</option>
-                <option value="Sudah Terkirim">Sudah Terkirim</option>
-                <option value="Belum Terkirim">Belum Terkirim</option>
-            </select>
         </div>
         <div class="month-grid" id="monthGrid"></div>
     </div>
@@ -132,13 +123,13 @@
 <footer>Created by <strong>Mulya.ID</strong></footer>
 
 <script>
-const DATA_URL = 'https://script.google.com/macros/s/AKfycbyWBWuNZs9m3ixRZ6NUrEtX8pxhtdvPRmh5Yw_70J6GDdikF76QByva9zRB5mzA9plR/exec';
+const DATA_URL = 'https://script.google.com/macros/s/AKfycbzhLhrRv6Q3E2tmctBAbj0mPRn-uCMzJi1VmqwjbypB-GtSSdvrHHPgvcX2EnXuNTm2/exec';
 const MONTHS = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 
 let rawData = [];
 let pieChart = null;
 let barChart = null;
-let selectedEmployee = '', selectedYear = '', selectedMonth = 'all', selectedStatus = 'all';
+let selectedEmployee = '', selectedYear = '', selectedMonth = 'all';
 
 function showToast() {
     const toast = document.getElementById('toast');
@@ -157,8 +148,7 @@ async function loadData() {
             ...r,
             pic: (r.pic_yang_melakukan_kesalahan || '').trim(),
             d: parseDate(r.tanggal),
-            detail: r.detail_kesalahan || '',
-            status: (r.status_terkirim || '').trim()
+            detail: r.detail_kesalahan || ''
         })).filter(r => r.d && r.pic);
 
         populateEmployees();
@@ -171,8 +161,12 @@ async function loadData() {
 
 function parseDate(s) {
     if(!s) return null;
-    const p = s.split('/');
-    return new Date(p[2], p[1]-1, p[0]);
+    if (typeof s === 'string' && s.includes('/')) {
+        const p = s.split('/');
+        return new Date(p[2], p[1]-1, p[0]);
+    }
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? null : d;
 }
 
 function populateEmployees() {
@@ -184,19 +178,23 @@ function populateEmployees() {
 function populateYears() {
     const years = [...new Set(rawData.map(r => r.d.getFullYear()))].sort((a,b)=>b-a);
     const sel = document.getElementById('yearSelect');
-    sel.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
-    selectedYear = years[0];
+    if (years.length > 0) {
+        sel.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+        selectedYear = years[0];
+    } else {
+        sel.innerHTML = `<option value="">Tidak ada data</option>`;
+    }
 }
 
 function populateMonths() {
     const sel = document.getElementById('monthSelect');
+    sel.innerHTML = '<option value="all">Semua Bulan</option>';
     MONTHS.forEach((m, i) => { sel.innerHTML += `<option value="${i}">${m}</option>`; });
 }
 
 document.getElementById('employeeInput').addEventListener('change', (e) => { selectedEmployee = e.target.value; update(); });
 document.getElementById('yearSelect').addEventListener('change', (e) => { selectedYear = e.target.value; update(); });
 document.getElementById('monthSelect').addEventListener('change', (e) => { selectedMonth = e.target.value; update(); });
-document.getElementById('statusSelect').addEventListener('change', (e) => { selectedStatus = e.target.value; update(); });
 
 function update() {
     if(!selectedEmployee) return;
@@ -204,22 +202,20 @@ function update() {
     // 1. Filter dasar berdasarkan PIC dan Tahun
     const baseData = rawData.filter(r => r.pic === selectedEmployee && r.d.getFullYear() == selectedYear);
     
-    // 2. Filter Detail (Sinkron dengan input filter Bulan & Status)
+    // 2. Filter Detail
     const detailData = baseData.filter(r => {
-        const matchMonth = selectedMonth === 'all' || r.d.getMonth() == selectedMonth;
-        const matchStatus = selectedStatus === 'all' || r.status === selectedStatus;
-        return matchMonth && matchStatus;
+        return selectedMonth === 'all' || r.d.getMonth() == selectedMonth;
     });
 
-    // 3. Update Profil & KPI (Dinamis sesuai filter)
+    // 3. Update Profil & KPI
     document.getElementById('employeeName').textContent = selectedEmployee;
-    document.getElementById('avatar').textContent = selectedEmployee[0].toUpperCase();
+    document.getElementById('avatar').textContent = selectedEmployee[0] ? selectedEmployee[0].toUpperCase() : '?';
     document.getElementById('kpiTotal').textContent = detailData.length;
     document.getElementById('kpiInvoice').textContent = new Set(detailData.map(r => r.invoice)).size;
 
-    // 4. Update Visualisasi (Semua pakai detailData agar Dinamis!)
+    // 4. Update Visualisasi
     renderPie(detailData); 
-    renderBar(baseData); // Tren tetap baseData supaya perbandingan 3 bulan terakhir tetap kelihatan
+    renderLineChart(baseData); 
     renderMonthlyDetail(detailData);
 }
 
@@ -230,7 +226,6 @@ function renderPie(rows) {
     const canvas = document.getElementById('pieChart');
     if(pieChart) pieChart.destroy();
 
-    // Jika data kosong setelah difilter, jangan gambar chart
     if (rows.length === 0) {
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -261,8 +256,13 @@ function renderPie(rows) {
     });
 }
 
-// LOGIKA TREN 3 BULAN (REVISI 4)
-function renderBar(rows) {
+function renderLineChart(rows) {
+    const canvas = document.getElementById('barChart');
+    if (rows.length === 0) {
+        if (barChart) barChart.destroy();
+        return;
+    }
+
     const latestDate = new Date(Math.max(...rows.map(r => r.d)));
     const monthsToShow = [];
     
@@ -285,16 +285,31 @@ function renderBar(rows) {
     });
 
     if (barChart) barChart.destroy();
-    barChart = new Chart(document.getElementById('barChart'), {
-        type: 'bar',
+
+    const ctx = canvas.getContext('2d');
+    
+    // Pembuatan Efek Gradient Fill (Arsiran memudar ke bawah)
+    const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+    gradient.addColorStop(0, 'rgba(245, 87, 108, 0.4)');  
+    gradient.addColorStop(1, 'rgba(245, 87, 108, 0.0)');  
+
+    barChart = new Chart(canvas, {
+        type: 'line',
         data: {
             labels: monthsToShow.map(m => m.label),
             datasets: [{
                 label: 'Jumlah Komplain',
                 data: monthsToShow.map(m => m.count),
-                backgroundColor: ['#4facfe', '#7c7cff', '#f5576c'],
-                borderRadius: 8,
-                barThickness: 30
+                borderColor: '#f5576c',
+                borderWidth: 3,
+                pointBackgroundColor: '#ffffff',
+                pointBorderColor: '#f5576c',
+                pointBorderWidth: 3,
+                pointRadius: 6,
+                pointHoverRadius: 8,
+                fill: true,
+                backgroundColor: gradient,
+                tension: 0.4 
             }]
         },
         options: {
@@ -302,8 +317,15 @@ function renderBar(rows) {
             maintainAspectRatio: false,
             plugins: { legend: { display: false } },
             scales: {
-                y: { beginAtZero: true, ticks: { color: '#a8acc4', stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.05)' } },
-                x: { ticks: { color: '#a8acc4' }, grid: { display: false } }
+                y: { 
+                    beginAtZero: true, 
+                    ticks: { color: '#a8acc4', stepSize: 1 }, 
+                    grid: { color: 'rgba(255,255,255,0.05)' } 
+                },
+                x: { 
+                    ticks: { color: '#a8acc4' }, 
+                    grid: { display: false } 
+                }
             }
         }
     });
@@ -313,21 +335,22 @@ function renderMonthlyDetail(rows) {
     const grid = document.getElementById('monthGrid');
     grid.innerHTML = '';
     const grouped = {};
+    
     rows.forEach(r => {
         const m = r.d.getMonth();
         if(!grouped[m]) grouped[m] = [];
         grouped[m].push(r);
     });
 
-    Object.keys(grouped).sort((a,b)=>b-a).forEach(m => {
+    Object.keys(grouped).sort((a,b)=>a-b).forEach(m => {
         const card = document.createElement('div');
         card.className = 'month-card';
         card.innerHTML = `<h4>${MONTHS[m]} ${selectedYear}</h4>`;
+        
         grouped[m].forEach(r => {
             const linkMatch = r.detail.match(/https?:\/\/[^\s|]+/g);
-            const driveUrl = linkMatch ? linkMatch[0] : '#';
-            const cleanText = r.detail.split('|')[0].replace(driveUrl, '').trim();
-            const statusClass = r.status === 'Sudah Terkirim' ? 'status-terkirim' : 'status-pending';
+            const driveUrl = linkMatch ? linkMatch[0] : (r.detail.startsWith('http') ? r.detail : '#');
+            const cleanText = linkMatch ? r.detail.replace(driveUrl, '').trim() : r.detail;
 
             const item = document.createElement('div');
             item.className = 'invoice-item';
@@ -336,8 +359,9 @@ function renderMonthlyDetail(rows) {
                     <i class="fa fa-external-link-alt" style="font-size: 10px;"></i> ${r.invoice || 'N/A'}
                 </a>
                 <div style="font-size:12px; margin-top:4px; font-weight:500;">${r.kasus}</div>
-                <div style="font-size:11px; color:var(--text-soft); margin-top:5px; font-style:italic;">${cleanText || 'Detail tidak tersedia'}</div>
-                <div class="status-badge ${statusClass}">${r.status}</div>
+                <div style="font-size:11px; color:var(--text-soft); margin-top:5px; font-style:italic; word-break: break-all;">
+                    ${cleanText || 'Lihat lampiran CCTV'}
+                </div>
             `;
             card.appendChild(item);
         });
